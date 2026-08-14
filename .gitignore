@@ -1,0 +1,6 @@
+dist-newstyle/
+result
+result-*
+*.hi
+*.o
+.direnv/

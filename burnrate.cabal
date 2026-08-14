@@ -1,0 +1,76 @@
+cabal-version:      2.4
+name:               burnrate
+version:            0.1.0.0
+synopsis:           Month-to-date LLM spend and projected burn, for a status bar
+description:
+  Reads per-key usage from Requesty and OpenRouter, estimates a burn rate, and
+  prints one terse line: spend against budget, pace, and the date the budget
+  runs out. Providers without a usage history are covered by a local sampling
+  log. Shared provider-side group budgets are supported via @--group@.
+homepage:           https://github.com/markus1189/burnrate
+license:            MIT
+license-file:       LICENSE
+author:             Markus
+maintainer:         Markus
+category:           System
+build-type:         Simple
+extra-doc-files:    README.md
+
+common warnings
+    ghc-options: -Wall -Wcompat -Wincomplete-record-updates
+                 -Wincomplete-uni-patterns -Wredundant-constraints
+
+library
+    import:           warnings
+    hs-source-dirs:   src
+    exposed-modules:  Burnrate.Types
+                    , Burnrate.Spec
+                    , Burnrate.Provider
+                    , Burnrate.Estimate
+                    , Burnrate.Render
+                    , Burnrate.Store
+    build-depends:    base             >=4.14 && <5
+                    , aeson            >=2.0
+                    , bytestring
+                    , containers
+                    , directory
+                    , filepath
+                    , http-conduit
+                    , lens
+                    , lens-aeson
+                    , process
+                    , text
+                    , time
+    default-language: Haskell2010
+
+executable burnrate
+    import:           warnings
+    hs-source-dirs:   app
+    main-is:          Main.hs
+    -- -N so the concurrent fetch actually overlaps on more than one capability.
+    ghc-options:      -O2 -threaded -rtsopts "-with-rtsopts=-N"
+    build-depends:    base
+                    , burnrate
+                    , aeson
+                    , bytestring
+                    , filepath
+                    , lens
+                    , lens-aeson
+                    , streamly         >=0.10
+                    , streamly-core
+                    , text
+                    , time
+    default-language: Haskell2010
+
+test-suite spec
+    import:           warnings
+    type:             exitcode-stdio-1.0
+    hs-source-dirs:   test
+    main-is:          Spec.hs
+    build-depends:    base
+                    , burnrate
+                    , aeson
+                    , containers
+                    , hspec
+                    , time
+    default-language: Haskell2010
