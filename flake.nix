@@ -34,12 +34,16 @@
         default = burnrate;
       });
 
-      apps = forAllSystems (system: pkgs: rec {
+      apps = forAllSystems (system: _pkgs: {
         burnrate = {
           type = "app";
           program = "${self.packages.${system}.burnrate}/bin/burnrate";
+          meta = {
+            mainProgram = "burnrate";
+            description = "Install & run burnrate — LLM spend & projected burn, for a status bar.";
+          };
         };
-        default = burnrate;
+        default = self.apps.${system}.burnrate;
       });
 
       devShells = forAllSystems (system: pkgs: {

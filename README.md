@@ -229,6 +229,7 @@ reconstructed, and keys absent from a run keep theirs.
 
 ```
 nix build            # or: nix run . -- --all 'pass:api/requesty/*'
+nix flake check     # checks every output across all systems
 nix develop          # cabal build / cabal test / HLS
 cabal test           # pure tests, no network
 ```
