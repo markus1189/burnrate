@@ -27,6 +27,9 @@ near a b = abs (a - b) `shouldSatisfy` (< 1e-9)
 acct :: Account
 acct = Account "k" 0 Nothing M.empty Nothing
 
+lim :: Double -> Account
+lim l = acct { acBudget = Just (MonthlyLimit l) }
+
 main :: IO ()
 main = hspec $ do
 
@@ -117,6 +120,20 @@ main = hspec $ do
       allowance acct { acSpent = 12, acBudget = Just (Remaining 5) } `shouldBe` Just 17
     it "is Nothing when unmetered" $
       allowance acct `shouldBe` Nothing
+
+  describe "groupPool" $ do
+    it "uses the shared budget when the members can actually reach it" $
+      groupPool 150 [lim 150, lim 25, lim 15, lim 5] `near` 150
+    it "falls back to the members' own limits when they cannot" $
+      -- The bug: one key of a 150 group, capped at 15 itself, was reported as
+      -- 5% of 150 rather than 46% of the 15 it will actually hit.
+      groupPool 150 [lim 15] `near` 15
+    it "counts a prepaid balance as spent-plus-remaining" $
+      groupPool 150 [acct { acSpent = 12, acBudget = Just (Remaining 5) }] `near` 17
+    it "is the shared budget alone when any member is unmetered" $
+      groupPool 150 [lim 15, acct] `near` 150
+    it "is the shared budget for no members at all" $
+      groupPool 150 [] `near` 150
 
   describe "prune" $ do
     it "drops points older than sixty days" $

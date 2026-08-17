@@ -131,19 +131,24 @@ main = getArgs >>= \argv -> case parseOpts argv defOpts of
           mem   = [x | x@(acc, _) <- rows, isJust (acGroup acc)]
           gids  = nub [g | (acc, _) <- mem, Just g <- [acGroup acc]]
           agg f = sum [f x | x <- mem]
+          -- Not the declared budget but what these keys can reach: pass a
+          -- subset of the group and their own limits, not the shared one, are
+          -- what they will hit first.
+          pool  = flip groupPool [acc | (acc, _) <- mem]
           grpRow = do
             (gname, glim) <- oGroup o
             if length gids == 1 && not (null mem)
               then Just (render now (Just (T.pack gname)) (agg (acSpent . fst))
-                           (Just (MonthlyLimit glim)) (agg (fst . snd))
+                           (Just (MonthlyLimit (pool glim))) (agg (fst . snd))
                            (provisional [rp | (_, rp) <- mem]))
               else Nothing
 
-          -- With a shared budget known, members' own limits are not the binding
-          -- constraint and must not inflate the pool.
+          -- With a shared budget known, members' own limits are folded into the
+          -- pool by 'groupPool' and must not be added a second time.
           lims = case (oGroup o, grpRow) of
             (Just (_, glim), Just _) ->
-              glim : [l | (acc, _) <- rows, isNothing (acGroup acc), Just l <- [allowance acc]]
+              pool glim
+                : [l | (acc, _) <- rows, isNothing (acGroup acc), Just l <- [allowance acc]]
             _ -> [l | (acc, _) <- rows, Just l <- [allowance acc]]
           total = render now Nothing (sum [acSpent acc | (acc, _) <- rows])
                     (if null lims then Nothing else Just (MonthlyLimit (sum lims)))

@@ -168,7 +168,10 @@ the given keys span more than one group the flag is ignored with a message rathe
 the wrong set. Bare `--group 200` labels the row `group`.
 
 Note the total covers exactly the keys you pass. Any other key in the same group draws on the
-same budget without appearing here, so the row reads low if the list is incomplete.
+same budget without appearing here, so the row reads low if the list is incomplete. The budget
+shown is capped at what those keys can actually reach — the sum of their own `monthly_limit`s —
+so a single `$15` key of a `$150` group is measured against `$15`, not against a pool the rest
+of the group holds most of.
 
 ## How the rate is estimated
 

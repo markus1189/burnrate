@@ -8,6 +8,7 @@ module Burnrate.Estimate
   , sampleIntervals
   , provisional
   , allowance
+  , groupPool
   , monthStart
   , monthElapsed
   , monthLength
@@ -15,6 +16,7 @@ module Burnrate.Estimate
 
 import           Burnrate.Types
 import qualified Data.Map.Strict as M
+import           Data.Maybe (isNothing)
 import           Data.Time
 
 -- | Recency-weighted spend per day from @(ageDays, spend, elapsedDays)@
@@ -59,6 +61,18 @@ allowance a = case acBudget a of
   Just (MonthlyLimit l) -> Just l
   Just (Remaining b)    -> Just (acSpent a + b)
   Nothing               -> Nothing
+
+-- | What the given group members can actually draw on. The shared budget caps
+--   the group, but each member is still capped by its own limit, and the keys
+--   you pass are not necessarily the whole group: pass a subset, or members
+--   with tight per-key limits, and those limits bind long before the shared
+--   budget does. A member with no limit of its own is unbounded, so there the
+--   shared budget is all there is.
+groupPool :: Double -> [Account] -> Double
+groupPool glim accs
+  | null accs                        = glim
+  | any (isNothing . allowance) accs = glim
+  | otherwise = min glim (sum [l | a <- accs, Just l <- [allowance a]])
 
 -- | Is an aggregate's rate provisional? Only if the guessed part carries a
 --   material share of it. An idle key with no history contributes nothing but a
