@@ -151,6 +151,31 @@ burnrate openrouter:env:OPENROUTER_API_KEY       # explicit provider and source
 burnrate 'cmd:vault read -field=key secret/llm'  # anything that prints a token
 ```
 
+### Shell completions
+
+The package ships generated completion files for bash, zsh and fish — build from the same
+`Parser` declaration as the CLI, so they cannot drift from it. They enable tab-completion of
+SPEC arguments: `pass:` and bare tokens complete against the password store, `env:` against
+the current environment, and `file:` against the filesystem (directories get a trailing `/`).
+Globs never auto-expand at the prompt, matching how a `pass` glob is only expanded when a run
+actually happens.
+
+When installed via `nix`, the shell reads them from the standard locations automatically:
+
+| Shell | File | 
+| --- | --- |
+| bash | `share/bash-completion/completions/burnrate` |
+| zsh | `share/zsh/site-functions/_burnrate` |
+| fish | `share/fish/vendor_completions.d/burnrate.fish` |
+
+If you are not using a shell that auto-loads them, source them directly — these are the same
+generated scripts, so however you load them they match the real parser:
+
+```bash
+eval "$(burnrate --bash-completion-script burnrate)"   # .bashrc
+# --zsh-completion-script / --fish-completion-script likewise
+```
+
 ### Group budgets
 
 Requesty can put a shared budget over a group of keys, and where one exists it is usually the
